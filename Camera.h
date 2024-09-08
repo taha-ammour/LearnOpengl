@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 
 #include <glm/glm.hpp>
+#include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 class Camera
@@ -23,7 +24,16 @@ private:
 	void update();
 
 public:
+	Camera();
+
 	Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed);
+	
+	void keyControls(bool* keys, GLfloat deltaTime);
+	void mouseControls(GLfloat xChange, GLfloat yChange);
+
+
+	glm::mat4 CalculateViewMatrix();
+	
 	~Camera();
 
 };

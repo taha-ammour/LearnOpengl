@@ -1,3 +1,6 @@
+#define STB_IMAGE_IMPLEMENTATION
+
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -12,25 +15,25 @@
 #include "Window.h"
 #include "Mesh.h"
 #include "Shader.h"
+#include "Camera.h"
+#include "Texture.h"
 
 const GLint width = 800;
 const GLint height = 600;
 
 const float toRadians = 3.14159265f / 180.0f;
 
+GLfloat deltaTime = 0.0f;
+GLfloat lastTime = 0.0f;
+
 Window mainWindow;
+Camera camera;
 
 std::vector<Mesh* > Meshlist;
 std::vector<Shader> Shaderlist;
 
-bool direction = true;
-float triOffset = 0.0f, triMaxOffset = 0.7f, triIncrement = 0.0005f;
-float curAngle = 0.0f;
-
-bool sizeDirection = true;
-float currentSize = 0.4f;
-float Maxsize = 0.8f, Minsize = 0.1f;
-
+Texture brickTexture;
+Texture dirtTexture;
 
 //Vertex Shader
 static const char* vShader = "Shaders/shader.vert";
@@ -48,15 +51,16 @@ void CreateOBJ()
 		0,1,2
 	};
 	GLfloat verticies[] = {
-		-1.0, -1.0, 0.0,
-		 0.0, -1.0, 1.0,
-		 1.0, -1.0, 0.0,
-		 0.0,  1.0, 0.0,
+	//	  x     y      z  |  u     v
+		-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+		 0.0f, -1.0f, 1.0f, 0.5f, 0.0f,
+		 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		 0.0f,  1.0f, 0.0f, 0.5f, 1.0f,
 	};
 
 
 	Mesh* obj1 = new Mesh();
-	obj1->Create_Mesh(verticies, indicies, 12, 12);
+	obj1->Create_Mesh(verticies, indicies, 20, 12);
 	Meshlist.push_back(obj1);
 
 }
@@ -76,53 +80,29 @@ int main(int argc, char* argv[]) {
 	CreateOBJ();
 	CreateShaders();
 
+	camera = Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 5.0f, 0.2f);
+
+	brickTexture = Texture((char*)"Textures/brick.png");
+	brickTexture.loadTexture();
+	dirtTexture = Texture((char*)"Textures/dirt.png");
+	dirtTexture.loadTexture();
+
 	glm::mat4 projection(1.0f);
 
-	GLuint uniformProjection = 0, uniformModel = 0;
+	GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0;
 
 	//projection = glm::ortho(-2.0f, 2.0f, -2.0f, 2.0f, -1.0f, 1.0f);
 	projection = glm::perspective(45.0f, (GLfloat)mainWindow.getBufferWidth() / (GLfloat)mainWindow.getBufferHeight(), 0.1f, 100.0f);
 
 	while (!mainWindow.getShouldClose())
 	{
+		GLfloat now = glfwGetTime();// SDL_GetPerformanceCounter(); in SDL
+		deltaTime = now - lastTime;// (num)*1000/SDL_GetPerformanceFrequency(); 
+		lastTime = now;
 		//Get + Handle User input Events
 		glfwPollEvents();
-
-		if (direction)
-		{
-			triOffset += triIncrement;
-		}
-		else
-		{
-			triOffset -= triIncrement;
-		}
-
-		if (abs(triOffset) >= triMaxOffset)
-		{
-			direction = !direction;
-		}
-
-		curAngle += 0.01f;
-		if (curAngle >= 360)
-		{
-			curAngle -= 360;
-		}
-
-		if (sizeDirection)
-		{
-			currentSize += 0.0001f;
-		}
-		else
-		{
-			currentSize -= 0.0001f;
-		}
-
-
-		if (currentSize >= Maxsize || currentSize <= Minsize)
-		{
-			sizeDirection = !sizeDirection;
-		}
-
+		camera.keyControls(mainWindow.getsKeys(), deltaTime);
+		camera.mouseControls(mainWindow.getXChange(), mainWindow.getYChange());
 
 		//Clear window
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -131,17 +111,18 @@ int main(int argc, char* argv[]) {
 		Shaderlist[0].useShader();
 		uniformModel = Shaderlist[0].get_ModelLocation();
 		uniformProjection = Shaderlist[0].get_ProjectionLocation();
+		uniformView = Shaderlist[0].get_ViewLocation();
 
 		glm::mat4 model(1.0f);
-		model = glm::translate(model, glm::vec3(triOffset, 0.0f, -3.5f));
-		model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -3.5f));
+		model = glm::rotate(model, 0.0f * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
-
 
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera.CalculateViewMatrix()));
 
-
+		brickTexture.useTexture();
 		Meshlist[0]->Render_Mesh();
 
 		glUseProgram(0);

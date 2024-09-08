@@ -7,7 +7,10 @@ Window::Window()
 	xChange = 0.0f;
 	yChange = 0.0f;
 
-	memset(keys, 0, sizeof(keys));
+	for (int i = 0; i < 1024; i++)
+	{
+		keys[i] = false;
+	}
 }
 
 Window::Window(GLint windowWidth, GLint windowHeight)
@@ -16,6 +19,10 @@ Window::Window(GLint windowWidth, GLint windowHeight)
 	height = windowHeight;
 	xChange = 0.0f;
 	yChange = 0.0f;
+	for (int i = 0; i < 1024; i++)
+	{
+		keys[i] = false;
+	}
 }
 
 int Window::initialize()
