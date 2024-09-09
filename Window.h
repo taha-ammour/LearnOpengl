@@ -20,6 +20,7 @@ private:
 	void createCallbacks();
 	static void handleKeys(GLFWwindow* window,int key, int code, int action, int mode);
 	static void handleMouse(GLFWwindow* window, double xPos, double yPos);
+	static void handleResize(GLFWwindow* window, int width, int height);
 
 public:
 	Window();

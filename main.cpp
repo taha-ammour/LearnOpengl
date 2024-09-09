@@ -17,6 +17,7 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "Texture.h"
+#include "Light.h"
 
 const GLint width = 800;
 const GLint height = 600;
@@ -28,6 +29,7 @@ GLfloat lastTime = 0.0f;
 
 Window mainWindow;
 Camera camera;
+Light mainLight;
 
 std::vector<Mesh* > Meshlist;
 std::vector<Shader> Shaderlist;
@@ -87,9 +89,12 @@ int main(int argc, char* argv[]) {
 	dirtTexture = Texture((char*)"Textures/dirt.png");
 	dirtTexture.loadTexture();
 
+	mainLight = Light(1.0f, 0.8f, 0.7f, 0.2f);
+	//mainLight = Light();
+
 	glm::mat4 projection(1.0f);
 
-	GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0;
+	GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0, uniformAmbientIntensity = 0, uniformAmbientColor = 0;
 
 	//projection = glm::ortho(-2.0f, 2.0f, -2.0f, 2.0f, -1.0f, 1.0f);
 	projection = glm::perspective(45.0f, (GLfloat)mainWindow.getBufferWidth() / (GLfloat)mainWindow.getBufferHeight(), 0.1f, 100.0f);
@@ -112,6 +117,10 @@ int main(int argc, char* argv[]) {
 		uniformModel = Shaderlist[0].get_ModelLocation();
 		uniformProjection = Shaderlist[0].get_ProjectionLocation();
 		uniformView = Shaderlist[0].get_ViewLocation();
+		uniformAmbientColor = Shaderlist[0].get_ambientColorLocation();
+		uniformAmbientIntensity = Shaderlist[0].get_ambientIntensityLocation();
+
+		mainLight.useLight(uniformAmbientIntensity, uniformAmbientColor);
 
 		glm::mat4 model(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, -3.5f));

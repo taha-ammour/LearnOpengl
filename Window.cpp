@@ -43,7 +43,7 @@ int Window::initialize()
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 
-	 mainWindow = glfwCreateWindow(width, height, "trying", NULL, NULL);
+	 mainWindow = glfwCreateWindow(width, height, "OpenGL", NULL, NULL);
 
 	if (!mainWindow)
 	{
@@ -86,6 +86,7 @@ void Window::createCallbacks()
 {
 	glfwSetKeyCallback(mainWindow, handleKeys);
 	glfwSetCursorPosCallback(mainWindow, handleMouse);
+	glfwSetFramebufferSizeCallback(mainWindow, handleResize);
 }
 
 void Window::handleKeys(GLFWwindow* window, int key, int code, int action, int mode) {
@@ -119,6 +120,11 @@ void Window::handleMouse(GLFWwindow* window, double xPos, double yPos)
 	theWindow->lastX = xPos;
 	theWindow->lastY = yPos;
 
+}
+
+void Window::handleResize(GLFWwindow* window, int width, int height)
+{
+	glViewport(0, 0, width, height);
 }
 
 GLfloat Window::getXChange()
