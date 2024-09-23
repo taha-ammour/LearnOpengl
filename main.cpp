@@ -24,6 +24,8 @@
 #include "SpotLight.h"
 #include "Material.h"
 
+#include "Model.h"
+
 const GLint width = 800;
 const GLint height = 600;
 
@@ -48,6 +50,7 @@ Texture plainTexture;
 Material ShinyMaterial;
 Material dullMaterial;
 
+Model helicopter;
 
 //Vertex Shader
 static const char* vShader = "Shaders/shader.vert";
@@ -150,19 +153,22 @@ int main(int argc, char* argv[]) {
 
 	camera = Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 5.0f, 0.2f);
 
-	brickTexture = Texture((char*)"Textures/brick.png");
-	brickTexture.loadTexture();
-	dirtTexture = Texture((char*)"Textures/dirt.png");
-	dirtTexture.loadTexture();
-	plainTexture = Texture((char*)"Textures/plain.png");
-	plainTexture.loadTexture();
+	brickTexture = Texture("Textures/brick.png");
+	brickTexture.loadTextureA();
+	dirtTexture = Texture("Textures/dirt.png");
+	dirtTexture.loadTextureA();
+	plainTexture = Texture("Textures/plain.png");
+	plainTexture.loadTextureA();
 
 	ShinyMaterial = Material(4.0f,256.0f);
 	dullMaterial = Material(0.3f, 4.0f);
 
+	helicopter = Model();
+	helicopter.LoadModel("Models/uh60.obj");
+
 	mainLight = DirectionalLight(1.0f, 1.0f, 1.0f,
-								 0.1f, 0.1f,
-								 0.0f, 0.0f, -2.0f);
+								 0.3f, 0.6f,
+								 0.0f, -0.2f, -1.0f);
 
 	unsigned int pointLightCount = 0;
 
@@ -216,7 +222,7 @@ int main(int argc, char* argv[]) {
 		camera.mouseControls(mainWindow.getXChange(), mainWindow.getYChange());
 
 		//Clear window
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		Shaderlist[0].useShader();
@@ -229,7 +235,7 @@ int main(int argc, char* argv[]) {
 
 		glm::vec3 lowerLight = camera.get_CameraPosition();
 		lowerLight.y -= 0.3f;
-		spotlight[0].setFlash(lowerLight, camera.get_CameraDirection());
+		//spotlight[0].setFlash(lowerLight, camera.get_CameraDirection());
 
 		Shaderlist[0].set_DirectionalLight(&mainLight);
 		Shaderlist[0].set_PointLight(pointlight, pointLightCount);
@@ -272,10 +278,17 @@ int main(int argc, char* argv[]) {
 
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 
-		plainTexture.useTexture();
+		dirtTexture.useTexture();
 		ShinyMaterial.useMaterial(uniformSpecularIntensity, uniformShininess);
 		Meshlist[2]->Render_Mesh();
 
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-3.0f, 2.0f, 0.0f));
+		model = glm::rotate(model, -90.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
+		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+		ShinyMaterial.useMaterial(uniformSpecularIntensity, uniformShininess);
+		helicopter.RenderModel();
 
 
 		glUseProgram(0);
